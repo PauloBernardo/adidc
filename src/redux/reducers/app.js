@@ -6,6 +6,7 @@ const initialState = {
   pack_id: undefined,
   promotion_id: undefined,
   timeline_id: undefined,
+  current_page: 'dashboard',
 };
 
 const reducer = (state = initialState, action) => {

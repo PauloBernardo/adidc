@@ -1,35 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter as Router, Switch, Route } from 'react-router-dom';
+import {
+  HashRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Auth } from '@aws-amplify/auth';
 import { Home } from '../pages/Home';
 import Login from '../pages/Login';
 import { NotFound } from '../pages/NotFound';
 import { MyNavBar } from '../components/MyNavBar';
-import { userLogged } from '../redux/actions/user';
+import { userLogged, userLogout } from '../redux/actions/user';
 import SignUp from '../pages/SignUp';
 import ConfirmSignUp from '../pages/ConfirmSignUp';
-import { ListProducts } from '../pages/products/ListProducts';
-import { ListTimeline } from '../pages/timeline/ListTimeline';
-import { ListProductItems } from '../pages/products/ListProductItems';
-import { ListPacks } from '../pages/packs/ListPacks';
-import { CompanyView } from '../pages/company/CompanyView';
-import { AddProducts } from '../pages/products/AddProducts';
-import { AddProductItem } from '../pages/products/AddProductItem';
-import { ProductView } from '../pages/products/ProductView';
-import { CompanyEdit } from '../pages/company/CompanyEdit';
-import { UserView } from '../pages/user/UserView';
-import { UserEdit } from '../pages/user/UserEdit';
-import { ListUsers } from '../pages/user/ListUsers';
-import { UserAdd } from '../pages/user/UserAdd';
-import { PackView } from '../pages/packs/PackView';
-import { TimelineView } from '../pages/timeline/TimelineView';
-import { ListPromotion } from '../pages/promotion/ListPromotion';
-import { PromotionView } from '../pages/promotion/PromotionView';
-import { ProductItemView } from '../pages/products/ProductItemView';
-import { AddTimeline } from '../pages/timeline/AddTimeline';
-import { EditTimeline } from '../pages/timeline/EditTimeline';
 import { About } from '../pages/About';
+import { BrandName, ButtonLogout, Item } from './styles';
+
+import brand from '../brand.png';
+import { Camaras } from '../pages/Camaras';
+import { Configuracao } from '../pages/Configuracao';
+import { Estatisticas } from '../pages/Estatisticas';
 
 /*----------------------------------------------------------------------------------------------------*/
 
@@ -50,7 +41,7 @@ function PrivateRoute({
         }
         if (DisconnectedComponent)
           return <DisconnectedComponent {...props} {...rest.props} />;
-        return <NotFound />;
+        return <Redirect to="/home" />;
       }}
     />
   );
@@ -59,6 +50,8 @@ function PrivateRoute({
 /*----------------------------------------------------------------------------------------------------*/
 
 function MainNavigation() {
+  const logged = useSelector((state) => state.user.logged);
+  const currentPage = useSelector((state) => state.app.current_page);
   const [loaded, setLoaded] = useState(false);
   const dispatch = useDispatch();
   const checkIsLogged = async () => {
@@ -71,55 +64,143 @@ function MainNavigation() {
     checkIsLogged().finally(() => setLoaded(true));
   }, []);
 
+  const onLogout = () => {
+    Auth.signOut()
+      .then(() => {
+        dispatch(userLogout());
+      })
+      .catch(() => alert('Falha ao deslogar'));
+  };
+
   return (
     <div>
       {loaded && (
         <>
           <MyNavBar />
-          <Router>
-            <Switch>
-              <PrivateRoute
-                path="/home"
-                component={Home}
-                disconnectedComponent={Login}
-              />
-              <PrivateRoute path="/signUp" disconnectedComponent={SignUp} />
-              <PrivateRoute path="/listProducts" component={ListProducts} />
-              <PrivateRoute
-                path="/listProductItems"
-                component={ListProductItems}
-              />
-              <PrivateRoute path="/listCompanies" component={CompanyView} />
-              <PrivateRoute path="/companyEdit" component={CompanyEdit} />
-              <PrivateRoute path="/listPackets" component={ListPacks} />
-              <PrivateRoute path="/packView" component={PackView} />
-              <PrivateRoute path="/addProducts" component={AddProducts} />
+          {logged ? (
+            <div className="container-fluid">
+              <div className="row">
+                <nav
+                  id="sidebarMenu"
+                  style={{ backgroundColor: '#00391B', minHeight: '100vh' }}
+                  className="col-md-3 col-lg-2 d-md-block sidebar collapse"
+                >
+                  <BrandName
+                    className="navbar-brand col-md-3 col-lg-2 me-0 px-3"
+                    href="#/home"
+                  >
+                    <img
+                      style={{ borderRadius: 10, marginRight: 10 }}
+                      src={brand}
+                      width={50}
+                      height={50}
+                      alt="Ícone"
+                    />
+                    ADIDC
+                  </BrandName>
+                  <div className="position-sticky pt-3">
+                    <ul className="nav flex-column">
+                      <li className="nav-item text-white">
+                        <Item
+                          active={currentPage === 'dashboard'}
+                          className="nav-link"
+                          aria-current="page"
+                          href="#/home"
+                        >
+                          <span data-feather="home" />
+                          Painel
+                        </Item>
+                      </li>
+                      <li className="nav-item">
+                        <Item
+                          active={currentPage === 'cameras'}
+                          className="nav-link"
+                          href="#/camaras"
+                        >
+                          <span data-feather="file" />
+                          Câmeras
+                        </Item>
+                      </li>
+                      <li className="nav-item">
+                        <Item
+                          active={currentPage === 'statistic'}
+                          className="nav-link"
+                          href="#/statistic"
+                        >
+                          <span data-feather="shopping-cart" />
+                          Estatísticas
+                        </Item>
+                      </li>
+                      <li className="nav-item">
+                        <Item
+                          active={currentPage === 'config'}
+                          className="nav-link"
+                          href="#/config"
+                        >
+                          <span data-feather="users" />
+                          Configurações
+                        </Item>
+                      </li>
+                    </ul>
+                  </div>
+                  <ButtonLogout onClick={onLogout}>Sair</ButtonLogout>
+                </nav>
+                <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                  <Router>
+                    <Switch>
+                      <PrivateRoute
+                        path="/home"
+                        component={Home}
+                        disconnectedComponent={Login}
+                      />
+                      <PrivateRoute
+                        path="/signUp"
+                        disconnectedComponent={SignUp}
+                        component={Home}
+                      />
+                      <PrivateRoute path="/aboutPage" component={About} />
+                      <PrivateRoute
+                        path="/confirmSignUp"
+                        disconnectedComponent={ConfirmSignUp}
+                      />
 
-              <PrivateRoute path="/addProductItem" component={AddProductItem} />
-              <PrivateRoute path="/editProductItem" component={AddProducts} />
-              <PrivateRoute path="/productView" component={ProductView} />
-              <PrivateRoute
-                path="/productItemView"
-                component={ProductItemView}
-              />
-              <PrivateRoute path="/userView" component={UserView} />
-              <PrivateRoute path="/userEdit" component={UserEdit} />
-              <PrivateRoute path="/userList" component={ListUsers} />
-              <PrivateRoute path="/userAdd" component={UserAdd} />
-              <PrivateRoute path="/timeline" component={ListTimeline} />
-              <PrivateRoute path="/timelineView" component={TimelineView} />
-              <PrivateRoute path="/addTimeline" component={AddTimeline} />
-              <PrivateRoute path="/editTimeline" component={EditTimeline} />
-              <PrivateRoute path="/listPromotion" component={ListPromotion} />
-              <PrivateRoute path="/promotionView" component={PromotionView} />
-              <PrivateRoute path="/aboutPage" component={About} />
-              <PrivateRoute
-                path="/confirmSignUp"
-                disconnectedComponent={ConfirmSignUp}
-              />
-              <Route path="*" exact component={NotFound} />
-            </Switch>
-          </Router>
+                      <PrivateRoute path="/camaras" component={Camaras} />
+                      <PrivateRoute path="/config" component={Configuracao} />
+                      <PrivateRoute
+                        path="/statistic"
+                        component={Estatisticas}
+                      />
+                      <Route path="*" exact component={NotFound} />
+                    </Switch>
+                  </Router>
+                </main>
+              </div>
+            </div>
+          ) : (
+            <Router>
+              <Switch>
+                <PrivateRoute
+                  path="/home"
+                  component={Home}
+                  disconnectedComponent={Login}
+                />
+                <PrivateRoute
+                  path="/signUp"
+                  disconnectedComponent={SignUp}
+                  component={Home}
+                />
+                <PrivateRoute path="/aboutPage" component={About} />
+                <PrivateRoute
+                  path="/confirmSignUp"
+                  disconnectedComponent={ConfirmSignUp}
+                />
+                <PrivateRoute path="/camaras" component={Camaras} />
+                <PrivateRoute path="/config" component={Configuracao} />
+                <PrivateRoute path="/statistic" component={Estatisticas} />
+                <Route path="*" exact component={NotFound} />
+              </Switch>
+            </Router>
+          )}
         </>
       )}
     </div>

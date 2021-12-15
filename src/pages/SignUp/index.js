@@ -1,88 +1,139 @@
 import React, { useState } from 'react';
-import { Button, Card, Form } from 'react-bootstrap';
+import { Alert, Card, Form } from 'react-bootstrap';
 import { useDispatch } from 'react-redux';
-import { Auth } from '@aws-amplify/auth';
-import { useHistory } from 'react-router';
+import { ButtonConfirm, CardStyled, Container, Title } from './styles';
 import { userLogged } from '../../redux/actions/user';
-import { CardStyled, Container } from './styles';
+import loginFigure from '../../loginFigure.png';
+import { apiPOST } from '../../services/api';
+import { POST_USER } from '../../services/routes';
+import { user } from '../../mockedData';
 
 const SignUp = () => {
-  const history = useHistory();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [data, setData] = useState({});
+  const [error, setError] = useState(null);
   const dispatch = useDispatch();
 
   const onSubmit = async (e) => {
     try {
       e.preventDefault();
-      if (confirmPassword !== password) return alert('Senha devem ser iguais!');
-      const username = email;
-      const response = await Auth.signUp({
-        username,
-        password,
-        attributes: { email },
-      });
-      dispatch(
-        userLogged({ logged: response.userConfirmed, ...response?.user })
-      );
-      if (!response.userConfirmed) {
-        history.push('/confirmSignUp');
+      if (data.password !== data.confirmPassword) {
+        setError('Senhas digitadas não são iguais.');
+        return;
       }
-    } catch (error) {
-      console.log(error);
+      if (!data.name && !data.phone && !data.email && !data.password) {
+        setError('Por favor, preencha os campos.');
+        return;
+      }
+      const response = await apiPOST(POST_USER, {
+        name: data.name,
+        username: data.name,
+        phone: data.phone,
+        email: data.email,
+        password: data.password,
+      });
+      if (response.has_error) {
+        setError('Algo deu errado, tente novamente.');
+        return;
+      }
+      dispatch(userLogged({ logged: true, user: {...user, ...response.data} }));
+    } catch (err) {
+      console.log(err);
+      setError(e.message);
     }
-    return 1;
   };
 
   return (
     <Container>
+      <img
+        src={loginFigure}
+        className="d-block mx-lg-auto img-fluid"
+        alt="Bootstrap Themes"
+        width="700"
+        height="500"
+        loading="lazy"
+      />
       <CardStyled>
-        <Card.Header>
-          <Card.Title>SignUp</Card.Title>
-        </Card.Header>
-        <Card.Body>
+        <Card.Body style={{ border: 0 }}>
+          <p
+            style={{
+              fontFamily: 'Roboto',
+              fontStyle: 'normal',
+              fontWeight: 'normal',
+              fontSize: 16,
+              color: '#2D3748',
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            Bem vindo!
+          </p>
+          <Title>Faça seu cadastro agora</Title>
+          {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={onSubmit}>
+            <Form.Group controlId="formBasicName">
+              <Form.Label>Nome</Form.Label>
+              <Form.Control
+                value={data.name}
+                onChange={(event) =>
+                  setData({ ...data, name: event.target.value })
+                }
+                type="text"
+                placeholder="Digite seu nome"
+              />
+            </Form.Group>
+            <Form.Group controlId="formBasicName">
+              <Form.Label>Celular</Form.Label>
+              <Form.Control
+                value={data.phone}
+                onChange={(event) =>
+                  setData({ ...data, phone: event.target.value })
+                }
+                type="text"
+                placeholder="Digite seu número do celular"
+              />
+            </Form.Group>
             <Form.Group controlId="formBasicEmail">
               <Form.Label>Email</Form.Label>
               <Form.Control
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                value={data.email}
+                onChange={(event) =>
+                  setData({ ...data, email: event.target.value })
+                }
                 type="email"
                 placeholder="Digite seu email"
               />
             </Form.Group>
+
             <Form.Group controlId="formBasicPassword">
               <Form.Label>Senha</Form.Label>
               <Form.Control
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                value={data.password}
+                onChange={(event) =>
+                  setData({ ...data, password: event.target.value })
+                }
                 type="password"
                 placeholder="Digite sua senha"
-                required
-                isInvalid={password && password.length === 0}
               />
-              <Form.Control.Feedback type="invalid">
-                A senha é necessária.
-              </Form.Control.Feedback>
             </Form.Group>
+
             <Form.Group controlId="formBasicPassword">
-              <Form.Label>Confirmar senha</Form.Label>
+              <Form.Label>Repetir Senha</Form.Label>
               <Form.Control
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                value={data.confirmPassword}
+                onChange={(event) =>
+                  setData({ ...data, confirmPassword: event.target.value })
+                }
                 type="password"
-                placeholder="Digite sua senha"
-                required
-                isInvalid={confirmPassword !== password}
+                placeholder="Digite sua senha novamente"
               />
-              <Form.Control.Feedback type="invalid">
-                A duas senhs devem ser iguais.
-              </Form.Control.Feedback>
             </Form.Group>
-            <Button variant="primary" type="submit">
+            <ButtonConfirm variant="primary" type="submit">
               Cadastrar
-            </Button>
+            </ButtonConfirm>
+
+            <p style={{ textAlign: 'center', width: '100%' }}>
+              Já tem conta? <a href="#/home">Faça login aqui</a>
+            </p>
           </Form>
         </Card.Body>
       </CardStyled>

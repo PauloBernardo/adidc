@@ -1,24 +1,20 @@
 import Axios from 'axios';
 import { Auth } from 'aws-amplify';
 
-const BASE_ROUTE = 'http://192.168.40.179:5000/';
-
-export const apiGET = async (route, data) => {
+export const apiGET = async (route, data, token) => {
   try {
-    const session = await Auth.currentSession();
-    const response = await Axios.get(`${BASE_ROUTE}get`, {
+    const response = await Axios.get(route, {
       headers: {
-        Authorization: session.getIdToken().getJwtToken(),
+        'x-access-token': token,
       },
       params: {
-        route,
         ...data,
       },
     });
     console.log('GET -', route, '-', response.status);
     return {
-      has_error: response?.data?.has_error || false,
-      response,
+      has_error: response.status !== 200,
+      ...response,
     };
   } catch (error) {
     console.log('GET -', route, '-', error?.response?.status);
@@ -31,23 +27,20 @@ export const apiGET = async (route, data) => {
 
 export const apiPOST = async (route, data) => {
   try {
-    const session = await Auth.currentSession();
-    const response = await Axios.post(
-      `${BASE_ROUTE}post`,
-      { ...data, route },
-      {
-        headers: {
-          Authorization: session.getIdToken().getJwtToken(),
-        },
-      }
-    );
-    console.log('POST -', route, '-', response.status);
+    // const session = await Auth.currentSession();
+    const response = await Axios.post(route, data, {
+      // headers: {
+      //   Authorization: session.getIdToken().getJwtToken(),
+      // },
+    });
+
+    console.log('POST -', route, '-', response.status, response);
     return {
-      has_error: response?.data?.has_error || false,
-      response,
+      has_error: response.status !== 200,
+      ...response,
     };
   } catch (error) {
-    console.log('POST -', route, '-', error?.response?.status);
+    console.log('POST -', route, '-', error);
     return {
       has_error: true,
       error,
@@ -58,12 +51,12 @@ export const apiPOST = async (route, data) => {
 export const apiDELETE = async (route, data) => {
   try {
     const session = await Auth.currentSession();
-    const response = await Axios.delete(`${BASE_ROUTE}delete`, {
+    const response = await Axios.delete(route, {
       headers: {
         AccessToken: session.getAccessToken().getJwtToken(),
         Authorization: session.getIdToken().getJwtToken(),
       },
-      params: { ...data, route },
+      params: { ...data },
     });
     console.log('DELETE -', route, '-', response.status);
     return {
@@ -83,8 +76,8 @@ export const apiPUT = async (route, data) => {
   try {
     const session = await Auth.currentSession();
     const response = await Axios.put(
-      `${BASE_ROUTE}put`,
-      { ...data, route },
+      route,
+      { ...data },
       {
         headers: {
           Authorization: session.getIdToken().getJwtToken(),
@@ -109,8 +102,8 @@ export const apiPATCH = async (route, data) => {
   try {
     const session = await Auth.currentSession();
     const response = await Axios.patch(
-      `${BASE_ROUTE}patch`,
-      { ...data, route },
+      route,
+      { ...data },
       {
         headers: {
           Authorization: session.getIdToken().getJwtToken(),

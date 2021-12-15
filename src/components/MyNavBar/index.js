@@ -1,5 +1,5 @@
 import React from 'react';
-import { Nav, Navbar, NavDropdown } from 'react-bootstrap';
+import { Nav, NavDropdown } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { Auth } from '@aws-amplify/auth';
 import { userLogout } from '../../redux/actions/user';
@@ -55,23 +55,5 @@ export const MyNavBar = () => {
     );
   };
 
-  return (
-    <Navbar bg="light" expand="lg">
-      <Navbar.Brand href="#home">PRINCIPAL</Navbar.Brand>
-      <Navbar.Toggle aria-controls="basic-navbar-nav" />
-      <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="mr-auto">
-          {logged ? linksConnected() : linksDisconnected()}
-        </Nav>
-        {/* <Form inline> */}
-        {/*  <FormControl */}
-        {/*    type="text" */}
-        {/*    placeholder="Digite algo.." */}
-        {/*    className="mr-sm-2" */}
-        {/*  /> */}
-        {/*  <Button variant="outline-success">Pesquisar</Button> */}
-        {/* </Form> */}
-      </Navbar.Collapse>
-    </Navbar>
-  );
+  return null;
 };
